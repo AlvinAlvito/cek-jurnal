@@ -121,12 +121,18 @@
                             <div class="card-body">
                                 <form action="{{ route('public.cek') }}" method="POST" class="row g-3">
                                     @csrf
-
                                     <div class="col-12">
                                         <label class="form-label">Link Rumah Jurnal</label>
                                         <input type="url" name="link"
                                             value="{{ old('link', $input['link'] ?? '') }}" class="form-control"
-                                            placeholder="https://contoh.com/rumah-jurnal" required>
+                                            placeholder="https://ejurnal.stmik-budidarma.ac.id/index.php/jurikom/index"
+                                            required>
+                                        <div class="form-text">
+                                            Link harus halaman <strong>HOME</strong> jurnal (bukan arsip/daftar/tanpa
+                                            path).
+                                            Contoh valid:
+                                            <code>https://ejurnal.stmik-budidarma.ac.id/index.php/jurikom/index</code>
+                                        </div>
                                     </div>
 
                                     <div class="col-md-4">
@@ -136,7 +142,8 @@
                                             @foreach ($bulanMap as $k => $v)
                                                 <option value="{{ $k }}"
                                                     {{ (int) old('bulan', $input['bulan'] ?? 0) === $k ? 'selected' : '' }}>
-                                                    {{ $v }}</option>
+                                                    {{ $v }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -180,50 +187,302 @@
                             </div>
                         </div>
 
-                        @if ($result)
-                            <div class="mt-4">
-                                @php
-                                    $b = $bulanMap[$result['detail']['bulan'] ?? ($input['bulan'] ?? 0)] ?? '-';
-                                    $t = $result['detail']['tahun'] ?? ($input['tahun'] ?? '-');
-                                    $status = $result['status'] ?? 'unknown';
-                                    $kelas = match ($status) {
-                                        'available' => 'alert-success',
-                                        'full' => 'alert-danger',
-                                        'not_found', 'not_available' => 'alert-warning',
-                                        default => 'alert-info',
-                                    };
-                                @endphp
-                                <div class="alert {{ $kelas }} text-start">
-                                    @if (isset($result['detail']))
-                                        <strong>{{ $result['detail']['jurnal'] ?? 'Jurnal' }}</strong>
-                                        ({{ $b }} {{ $t }})<br>
-                                        Dosen pembimbing: <strong>{{ $result['detail']['dosen'] ?? '-' }}</strong><br>
-                                        Link:
-                                        @if (!empty($result['detail']['link'] ?? ''))
-                                            <a href="{{ $result['detail']['link'] }}" target="_blank"
-                                                rel="noopener noreferrer">
-                                                {{ $result['detail']['link'] }}
+                        {{-- ========== MODAL HASIL CEK (rapih & responsif) ========== --}}
+                        <div class="modal fade" id="cekResultModal" tabindex="-1"
+                            aria-labelledby="cekResultModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                                <div class="modal-content">
+
+                                    @php
+                                        $status = $result['status'] ?? null;
+                                        $title = $result['title'] ?? '';
+                                        $message = $result['message'] ?? '';
+                                        $detail = $result['detail'] ?? null;
+
+                                        $badgeCls = match ($status) {
+                                            'available' => 'bg-success',
+                                            'full' => 'bg-danger',
+                                            'not_available' => 'bg-warning text-dark',
+                                            'not_found' => 'bg-warning text-dark',
+                                            default => 'bg-secondary',
+                                        };
+                                        $icon = match ($status) {
+                                            'available' => 'bi-check-circle-fill',
+                                            'full' => 'bi-x-circle-fill',
+                                            'not_available' => 'bi-exclamation-triangle-fill',
+                                            'not_found' => 'bi-search',
+                                            default => 'bi-info-circle-fill',
+                                        };
+                                    @endphp
+
+                                    <div class="modal-header border-0 pb-0">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge {{ $badgeCls }} rounded-pill px-3 py-2">
+                                                <i class="bi {{ $icon }}"></i>
+                                            </span>
+                                            <h5 class="modal-title fw-semibold m-0" id="cekResultModalLabel">
+                                                {{ $title }}</h5>
+                                        </div>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Tutup"></button>
+                                    </div>
+
+                                    <div class="modal-body pt-2">
+                                        {{-- Pesan singkat --}}
+                                        <p class="mb-3">{{ $message }}</p>
+
+                                        {{-- Info link yang dimasukkan (kalau tidak ditemukan) --}}
+                                        @if ($status === 'not_found' && !empty($detail['link_input'] ?? ''))
+                                            <div class="alert alert-light border d-flex align-items-start gap-2 small">
+                                                <i class="bi bi-link-45deg fs-5"></i>
+                                                <div>
+                                                    Link yang Anda masukkan: <code
+                                                        class="text-break">{{ $detail['link_input'] }}</code><br>
+                                                    Pastikan link adalah halaman <strong>HOME</strong> jurnal (bukan
+                                                    arsip/daftar/tanpa path).<br>
+                                                    Contoh valid:
+                                                    <code
+                                                        class="text-break">https://ejurnal.stmik-budidarma.ac.id/index.php/jurikom/index</code>
+                                                </div>
+                                            </div>
+                                        @endif
+
+                                        {{-- Detail hasil (jika jurnal terdeteksi) --}}
+                                        @if (isset($detail['jurnal']))
+                                            <ul class="list-group mb-2">
+                                                <li
+                                                    class="list-group-item d-flex justify-content-between align-items-start">
+                                                    <div class="me-3"><i
+                                                            class="bi bi-journal-text me-2"></i><strong>Jurnal</strong>
+                                                    </div>
+                                                    <div class="text-end text-wrap">{{ $detail['jurnal'] }}</div>
+                                                </li>
+
+                                                <li
+                                                    class="list-group-item d-flex justify-content-between align-items-start">
+                                                    <div class="me-3"><i
+                                                            class="bi bi-link-45deg me-2"></i><strong>Link</strong>
+                                                    </div>
+                                                    <div class="text-end text-wrap">
+                                                        @if (!empty($detail['link'] ?? ''))
+                                                            <a href="{{ $detail['link'] }}" target="_blank"
+                                                                rel="noopener noreferrer">{{ $detail['link'] }}</a>
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </div>
+                                                </li>
+
+                                                <li
+                                                    class="list-group-item d-flex justify-content-between align-items-start">
+                                                    <div class="me-3"><i
+                                                            class="bi bi-calendar-event me-2"></i><strong>Edisi</strong>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        {{ $bulanMap[$detail['bulan'] ?? 0] ?? '-' }}
+                                                        {{ $detail['tahun'] ?? '-' }}
+                                                    </div>
+                                                </li>
+
+                                                <li
+                                                    class="list-group-item d-flex justify-content-between align-items-start">
+                                                    <div class="me-3"><i
+                                                            class="bi bi-person-badge me-2"></i><strong>Dosen
+                                                            Pembimbing</strong></div>
+                                                    <div class="text-end">{{ $detail['dosen'] ?? '-' }}</div>
+                                                </li>
+
+                                                @if (isset($detail['kapasitas']))
+                                                    <li class="list-group-item">
+                                                        <div
+                                                            class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                                                            <div><i class="bi bi-ui-checks-grid me-2"></i><strong>Kapasitas
+                                                                    & Slot</strong></div>
+                                                            <div class="d-flex flex-wrap gap-2">
+                                                                <span class="badge bg-secondary">Kapasitas:
+                                                                    {{ $detail['kapasitas'] }}</span>
+                                                                <span class="badge bg-primary">Terpakai:
+                                                                    {{ $detail['terpakai'] }}</span>
+                                                                <span
+                                                                    class="badge {{ ($detail['sisa'] ?? 0) > 0 ? 'bg-success' : 'bg-danger' }}">
+                                                                    Sisa: {{ $detail['sisa'] }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                @endif
+                                            </ul>
+                                        @endif
+                                    </div>
+
+                                    <div class="modal-footer border-0 pt-0">
+                                        @if ($status === 'not_found')
+                                            <button type="button" class="btn btn-outline-secondary"
+                                                data-bs-dismiss="modal">
+                                                <i class="bi bi-arrow-left-short me-1"></i>Tutup
+                                            </button>
+                                            <a href="mailto:koordinator@rumahjurnal.id" class="btn btn-warning">
+                                                <i class="bi bi-envelope-fill me-1"></i>Hubungi Koordinator Jurnal
                                             </a>
                                         @else
-                                            -
                                         @endif
-                                        <hr class="my-2">
-                                    @endif
-                                    {{ $result['message'] ?? '' }}
-                                    @if (isset($result['detail']['kapasitas']))
-                                        <div class="mt-1">
-                                            Kapasitas: {{ $result['detail']['kapasitas'] ?? '-' }},
-                                            Terpakai: {{ $result['detail']['terpakai'] ?? '-' }},
-                                            Sisa: {{ $result['detail']['sisa'] ?? '-' }}
-                                        </div>
-                                    @endif
+                                    </div>
+
                                 </div>
                             </div>
+                        </div>
+
+                        {{-- Auto show modal jika ada hasil --}}
+                        @if ($result)
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    if (window.bootstrap) {
+                                        const modalEl = document.getElementById('cekResultModal');
+                                        const modal = new bootstrap.Modal(modalEl, {
+                                            backdrop: 'static'
+                                        });
+                                        modal.show();
+                                    }
+                                });
+                            </script>
+                        @endif
+
+
+                        {{-- Auto show modal jika ada hasil --}}
+                        @if ($result)
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    if (window.bootstrap) {
+                                        const modalEl = document.getElementById('cekResultModal');
+                                        const modal = new bootstrap.Modal(modalEl);
+                                        modal.show();
+                                    }
+                                });
+                            </script>
                         @endif
 
                     </div>
                 </div>
             </div>
+        </section>
+
+        {{-- Bootstrap Icons (untuk ikon di modal) --}}
+        <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+
+        <div class="row">
+            <div class="col-lg-10 col-12 mx-auto text-center">
+                <h1 class="text-white">Sistem Cek Ketersediaan Rumah Jurnal</h1>
+                <h6 class="text-white mt-3">Masukkan link, edisi, tahun, dan dosen pembimbing untuk cek
+                    ketersediaan</h6>
+
+                <div class="card mt-4 text-start">
+                    <div class="card-body">
+                        <form action="{{ route('public.cek') }}" method="POST" class="row g-3">
+                            @csrf
+
+                            <div class="col-12">
+                                <label class="form-label">Link Rumah Jurnal</label>
+                                <input type="url" name="link" value="{{ old('link', $input['link'] ?? '') }}"
+                                    class="form-control" placeholder="https://contoh.com/rumah-jurnal" required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Bulan (Edisi)</label>
+                                <select name="bulan" class="form-select" required>
+                                    @php $bulanMap = [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember']; @endphp
+                                    @foreach ($bulanMap as $k => $v)
+                                        <option value="{{ $k }}"
+                                            {{ (int) old('bulan', $input['bulan'] ?? 0) === $k ? 'selected' : '' }}>
+                                            {{ $v }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Tahun</label>
+                                <input type="number" name="tahun"
+                                    value="{{ old('tahun', $input['tahun'] ?? '') }}" class="form-control"
+                                    placeholder="mis. 2025" min="2000" max="2100" required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Nama Dosen Pembimbing</label>
+                                <select name="dosen_pembimbing_id" class="form-select" required>
+                                    <option value="">-- Pilih Dosen --</option>
+                                    @foreach ($dosenList as $d)
+                                        <option value="{{ $d->id }}"
+                                            {{ (int) old('dosen_pembimbing_id', $input['dosen_pembimbing_id'] ?? 0) === $d->id ? 'selected' : '' }}>
+                                            {{ $d->nama }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            @if ($errors->any())
+                                <div class="col-12">
+                                    <div class="alert alert-danger">
+                                        <ul class="mb-0 ps-3">
+                                            @foreach ($errors->all() as $err)
+                                                <li>{{ $err }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div class="col-12 text-end">
+                                <button class="btn btn-primary">Cek Ketersediaan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                @if ($result)
+                    <div class="mt-4">
+                        @php
+                            $b = $bulanMap[$result['detail']['bulan'] ?? ($input['bulan'] ?? 0)] ?? '-';
+                            $t = $result['detail']['tahun'] ?? ($input['tahun'] ?? '-');
+                            $status = $result['status'] ?? 'unknown';
+                            $kelas = match ($status) {
+                                'available' => 'alert-success',
+                                'full' => 'alert-danger',
+                                'not_found', 'not_available' => 'alert-warning',
+                                default => 'alert-info',
+                            };
+                        @endphp
+                        <div class="alert {{ $kelas }} text-start">
+                            @if (isset($result['detail']))
+                                <strong>{{ $result['detail']['jurnal'] ?? 'Jurnal' }}</strong>
+                                ({{ $b }} {{ $t }})<br>
+                                Dosen pembimbing: <strong>{{ $result['detail']['dosen'] ?? '-' }}</strong><br>
+                                Link:
+                                @if (!empty($result['detail']['link'] ?? ''))
+                                    <a href="{{ $result['detail']['link'] }}" target="_blank"
+                                        rel="noopener noreferrer">
+                                        {{ $result['detail']['link'] }}
+                                    </a>
+                                @else
+                                    -
+                                @endif
+                                <hr class="my-2">
+                            @endif
+                            {{ $result['message'] ?? '' }}
+                            @if (isset($result['detail']['kapasitas']))
+                                <div class="mt-1">
+                                    Kapasitas: {{ $result['detail']['kapasitas'] ?? '-' }},
+                                    Terpakai: {{ $result['detail']['terpakai'] ?? '-' }},
+                                    Sisa: {{ $result['detail']['sisa'] ?? '-' }}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
+            </div>
+        </div>
+        </div>
         </section>
 
         <section class="featured-section">
@@ -433,6 +692,8 @@
 
 
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
         integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous">
@@ -447,6 +708,36 @@
     <script src="script/click-scroll.js"></script>
     <script src="script/custom.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    @if ($result)
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                if (window.bootstrap) {
+                    const modalEl = document.getElementById('cekResultModal');
+                    // pastikan tidak double-init
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl, {
+                        backdrop: true, // boleh klik luar untuk tutup (bukan 'static')
+                        keyboard: true
+                    });
+
+                    // Bersihin sisa backdrop/kelas body saat modal bener2 tertutup
+                    modalEl.addEventListener('hidden.bs.modal', () => {
+                        // dispose instance biar nggak nempel listener berkali-kali
+                        modal.dispose?.();
+                        // hapus backdrop yang mungkin nyangkut
+                        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                        // pulihkan body
+                        document.body.classList.remove('modal-open');
+                        document.body.style.removeProperty('padding-right');
+                        document.body.style.removeProperty('overflow');
+                    }, {
+                        once: true
+                    });
+
+                    modal.show();
+                }
+            });
+        </script>
+    @endif
 
 </body>
 

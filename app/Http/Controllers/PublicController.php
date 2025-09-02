@@ -28,19 +28,24 @@ class PublicController extends Controller
             'bulan'                => ['required','integer','between:1,12'],
             'tahun'                => ['required','integer','between:2000,2100'],
             'dosen_pembimbing_id'  => ['required','integer','exists:dosen_pembimbing,id'],
-        ], [
-            'link.required' => 'Link rumah jurnal wajib diisi.',
         ]);
 
+        // Normalisasi sederhana (tanpa ribet): hilangkan trailing slash
+        $link = rtrim($validated['link'], '/');
         $dosen = DosenPembimbing::find($validated['dosen_pembimbing_id']);
 
-        // Cari rumah jurnal by link
-        $journal = RumahJurnal::where('link', $validated['link'])->first();
+        // Cari journal dgn link EXACT (sesuai permintaan: tidak dibuat ribet)
+        $journal = RumahJurnal::whereRaw('LOWER(link) = ?', [strtolower($link)])->first();
 
+        // Jika link tidak ada di DB → tampilkan modal "tidak terdaftar"
         if (!$journal) {
             $result = [
-                'status' => 'not_found',
-                'message' => 'Link rumah jurnal tidak terdaftar di sistem admin.',
+                'status'  => 'not_found',
+                'title'   => 'Link Rumah Jurnal Tidak Terdaftar',
+                'message' => 'Periksa kembali link yang Anda masukkan. Link harus berupa halaman HOME dari rumah jurnal tersebut. Contoh: https://ejurnal.stmik-budidarma.ac.id/index.php/jurikom/index. Jika masih bermasalah, silakan hubungi koordinator jurnal.',
+                'detail'  => [
+                    'link_input' => $link,
+                ],
             ];
             return $this->renderResult($request, $result, $validated);
         }
@@ -50,7 +55,7 @@ class PublicController extends Controller
         $maxDefault = (int)($rules->max_mahasiswa_per_edisi ?? 2);
         $unikDosen  = (int)($rules->unik_dosen_per_edisi ?? 1) === 1;
 
-        // Cari edisi; kalau belum ada, JANGAN bikin—anggap terpakai=0 dan kapasitas=rules default
+        // Cek edisi
         $edisi = EdisiRumahJurnal::where('rumah_jurnal_id', $journal->id)
             ->where('tahun', $validated['tahun'])
             ->where('bulan', $validated['bulan'])
@@ -61,7 +66,6 @@ class PublicController extends Controller
             $terpakai  = PemakaianRumahJurnal::where('edisi_id', $edisi->id)
                 ->whereIn('status', ['pending','disetujui'])
                 ->count();
-
             $dosenSudahDipakai = $unikDosen
                 ? PemakaianRumahJurnal::where('edisi_id', $edisi->id)
                     ->where('dosen_pembimbing_id', $validated['dosen_pembimbing_id'])
@@ -69,56 +73,60 @@ class PublicController extends Controller
                     ->exists()
                 : false;
         } else {
+            // Jika edisi belum ada → asumsikan kapasitas default, terpakai = 0
             $kapasitas = $maxDefault;
-            $terpakai = 0;
-            $dosenSudahDipakai = false; // belum ada edisi, berarti belum ada pemakaian
+            $terpakai  = 0;
+            $dosenSudahDipakai = false;
         }
 
         $sisa = max(0, $kapasitas - $terpakai);
 
         if ($dosenSudahDipakai) {
             $result = [
-                'status' => 'not_available',
-                'message' => 'Tidak tersedia karena dosen pembimbing yang sama sudah dipakai pada edisi tersebut.',
+                'status'  => 'not_available',
+                'title'   => 'Tidak Tersedia (Dosen Sudah Terpakai)',
+                'message' => 'Dosen pembimbing yang sama sudah terpakai pada edisi ini.',
                 'detail'  => [
-                    'jurnal' => $journal->nama,
-                    'link'   => $journal->link,
-                    'bulan'  => $validated['bulan'],
-                    'tahun'  => $validated['tahun'],
-                    'dosen'  => $dosen->nama,
-                    'kapasitas' => $kapasitas,
-                    'terpakai'  => $terpakai,
-                    'sisa'      => $sisa,
-                ]
+                    'jurnal'     => $journal->nama,
+                    'link'       => $journal->link,
+                    'bulan'      => $validated['bulan'],
+                    'tahun'      => $validated['tahun'],
+                    'dosen'      => $dosen->nama,
+                    'kapasitas'  => $kapasitas,
+                    'terpakai'   => $terpakai,
+                    'sisa'       => $sisa,
+                ],
             ];
         } elseif ($sisa > 0) {
             $result = [
-                'status' => 'available',
-                'message' => "Tersedia. Sisa {$sisa} slot.",
+                'status'  => 'available',
+                'title'   => 'Tersedia',
+                'message' => "Jurnal tersedia. Tersisa {$sisa} slot.",
                 'detail'  => [
-                    'jurnal' => $journal->nama,
-                    'link'   => $journal->link,
-                    'bulan'  => $validated['bulan'],
-                    'tahun'  => $validated['tahun'],
-                    'dosen'  => $dosen->nama,
-                    'kapasitas' => $kapasitas,
-                    'terpakai'  => $terpakai,
-                    'sisa'      => $sisa,
+                    'jurnal'     => $journal->nama,
+                    'link'       => $journal->link,
+                    'bulan'      => $validated['bulan'],
+                    'tahun'      => $validated['tahun'],
+                    'dosen'      => $dosen->nama,
+                    'kapasitas'  => $kapasitas,
+                    'terpakai'   => $terpakai,
+                    'sisa'       => $sisa,
                 ],
             ];
         } else {
             $result = [
-                'status' => 'full',
-                'message' => 'Tidak tersedia. Slot edisi ini sudah penuh.',
+                'status'  => 'full',
+                'title'   => 'Slot Penuh',
+                'message' => 'Jurnal tidak tersedia karena slot edisi ini sudah penuh.',
                 'detail'  => [
-                    'jurnal' => $journal->nama,
-                    'link'   => $journal->link,
-                    'bulan'  => $validated['bulan'],
-                    'tahun'  => $validated['tahun'],
-                    'dosen'  => $dosen->nama,
-                    'kapasitas' => $kapasitas,
-                    'terpakai'  => $terpakai,
-                    'sisa'      => $sisa,
+                    'jurnal'     => $journal->nama,
+                    'link'       => $journal->link,
+                    'bulan'      => $validated['bulan'],
+                    'tahun'      => $validated['tahun'],
+                    'dosen'      => $dosen->nama,
+                    'kapasitas'  => $kapasitas,
+                    'terpakai'   => $terpakai,
+                    'sisa'       => $sisa,
                 ],
             ];
         }
@@ -131,7 +139,7 @@ class PublicController extends Controller
         $dosenList = DosenPembimbing::orderBy('nama')->get(['id','nama']);
         return view('login', [
             'dosenList' => $dosenList,
-            'result'    => $result,
+            'result'    => $result,  // <— dipakai untuk modal
             'input'     => $input,
         ]);
     }
