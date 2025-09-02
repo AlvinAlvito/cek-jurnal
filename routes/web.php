@@ -6,13 +6,14 @@ use App\Http\Controllers\DosenController;
 use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\JurnalController;
 use App\Http\Controllers\JurnalcekController;
-
+use App\Http\Controllers\KontrolJurnalController;
+use App\Http\Controllers\PublicController;
+use App\Http\Controllers\DashboardController;
 // ===================
 // Halaman Login
 // ===================
-Route::get('/', function () {
-    return view('login');
-})->name('login');
+Route::get('/', [PublicController::class, 'index'])->name('login');        // tampilkan form
+Route::post('/cek-ketersediaan', [PublicController::class, 'cek'])->name('public.cek');  // proses cek
 
 // ===================
 // Proses Login Manual
@@ -21,7 +22,7 @@ Route::post('/', function (Request $request) {
     $username = $request->username;
     $password = $request->password;
 
-    if ($username === 'admin' && $password === '123') {
+    if ($username === 'gibran' && $password === '19juta') {
         session(['is_admin' => true]);
         return redirect('/admin');
     }
@@ -37,17 +38,14 @@ Route::get('/logout', function () {
     return redirect('/');
 })->name('logout');
 
-// ===================
-// Dashboard Admin
-// ===================
-use App\Http\Controllers\DashboardController;
+
+// Dashboard admin
 
 Route::get('/admin', function () {
-    if (!session('is_admin')) {
-        return redirect('/');
-    }
-    return view('admin.index');
+    if (!session('is_admin')) return redirect('/');
+    return app(DashboardController::class)->index();
 })->name('index');
+
 
 
 // ===================
@@ -137,3 +135,15 @@ Route::put('/admin/data-jurnalcek/{id}', function (Request $request, $id) {
     if (!session('is_admin')) return redirect('/');
     return app(App\Http\Controllers\JurnalcekController::class)->update($request, $id);
 })->name('jurnalcek.update');
+
+
+// Kontrol jurnal
+Route::get('/admin/kontrol-jurnal', function () {
+    if (!session('is_admin')) return redirect('/');
+    return app(KontrolJurnalController::class)->index();
+})->name('kontroljurnal.index');
+
+Route::post('/admin/kontrol-jurnal/rules', function (Request $request) {
+    if (!session('is_admin')) return redirect('/');
+    return app(KontrolJurnalController::class)->updateRules($request);
+})->name('kontroljurnal.rules');

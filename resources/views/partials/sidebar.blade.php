@@ -39,6 +39,12 @@
                     <span class="link-name">Data Cek jurnal</span>
                 </a>
             </li>
+             <li >
+                <a href="/admin/kontrol-jurnal" class="{{ Request::is('/admin/kontrol-jurnal') ? 'active' : '' }}">
+                    <i class="uil uil-chart"></i>
+                    <span class="link-name">Kontrol jurnal</span>
+                </a>
+            </li>
            
            
         </ul>

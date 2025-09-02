@@ -8,7 +8,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Prediksi Sembako</title>
+    <title>Cek Jurnal</title>
 
     <!-- CSS FILES -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,7 +36,7 @@
             <div class="container">
                 <a class="navbar-brand" href="index.html">
                     <i class="bi-back"></i>
-                    <span>Prediksi Sembako</span>
+                    <span>Cek Jurnal</span>
                 </a>
 
                 <div class="d-lg-none ms-auto me-4">
@@ -83,15 +83,15 @@
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link click-scroll" href="#section_2">Tentang Kami</a>
+                            <a class="nav-link click-scroll" href="#section_2">Tentang Sistem</a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link click-scroll" href="#section_3">Fitur</a>
+                            <a class="nav-link click-scroll" href="#section_3">Alur Sistem</a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link click-scroll" href="#section_4">Hasil Perhitungan</a>
+                            <a class="nav-link click-scroll" href="#section_4">Kontrol Jurnal</a>
                         </li>
 
                         <li class="nav-item">
@@ -101,9 +101,10 @@
 
                     <div class="d-none d-lg-block">
                         <a href="#top" data-bs-toggle="modal" data-bs-target="#loginModal"
-                            class="navbar-icon bi-person smoothscroll"></a>
+                            class="navbar-icon bi-person smoothscroll" title="Login Admin"></a>
                     </div>
                 </div>
+
             </div>
         </nav>
 
@@ -111,20 +112,116 @@
         <section class="hero-section d-flex justify-content-center align-items-center" id="section_1">
             <div class="container">
                 <div class="row">
-
                     <div class="col-lg-10 col-12 mx-auto text-center">
-                        <h1 class="text-white">Sistem Prediksi Penjualan Sembako</h1>
+                        <h1 class="text-white">Sistem Cek Ketersediaan Rumah Jurnal</h1>
+                        <h6 class="text-white mt-3">Masukkan link, edisi, tahun, dan dosen pembimbing untuk cek
+                            ketersediaan</h6>
 
-                        <h6 class="text-white mt-3">
-                            Visualisasi & Prediksi Penjualan Menggunakan Metode Regresi Linier Sederhana
-                        </h6>
+                        <div class="card mt-4 text-start">
+                            <div class="card-body">
+                                <form action="{{ route('public.cek') }}" method="POST" class="row g-3">
+                                    @csrf
 
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal"
-                            class="btn btn-light btn-lg mt-4">
-                            Masuk Dashboard
-                        </a>
+                                    <div class="col-12">
+                                        <label class="form-label">Link Rumah Jurnal</label>
+                                        <input type="url" name="link"
+                                            value="{{ old('link', $input['link'] ?? '') }}" class="form-control"
+                                            placeholder="https://contoh.com/rumah-jurnal" required>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">Bulan (Edisi)</label>
+                                        <select name="bulan" class="form-select" required>
+                                            @php $bulanMap = [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember']; @endphp
+                                            @foreach ($bulanMap as $k => $v)
+                                                <option value="{{ $k }}"
+                                                    {{ (int) old('bulan', $input['bulan'] ?? 0) === $k ? 'selected' : '' }}>
+                                                    {{ $v }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">Tahun</label>
+                                        <input type="number" name="tahun"
+                                            value="{{ old('tahun', $input['tahun'] ?? '') }}" class="form-control"
+                                            placeholder="mis. 2025" min="2000" max="2100" required>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label">Nama Dosen Pembimbing</label>
+                                        <select name="dosen_pembimbing_id" class="form-select" required>
+                                            <option value="">-- Pilih Dosen --</option>
+                                            @foreach ($dosenList as $d)
+                                                <option value="{{ $d->id }}"
+                                                    {{ (int) old('dosen_pembimbing_id', $input['dosen_pembimbing_id'] ?? 0) === $d->id ? 'selected' : '' }}>
+                                                    {{ $d->nama }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    @if ($errors->any())
+                                        <div class="col-12">
+                                            <div class="alert alert-danger">
+                                                <ul class="mb-0 ps-3">
+                                                    @foreach ($errors->all() as $err)
+                                                        <li>{{ $err }}</li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <div class="col-12 text-end">
+                                        <button class="btn btn-primary">Cek Ketersediaan</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        @if ($result)
+                            <div class="mt-4">
+                                @php
+                                    $b = $bulanMap[$result['detail']['bulan'] ?? ($input['bulan'] ?? 0)] ?? '-';
+                                    $t = $result['detail']['tahun'] ?? ($input['tahun'] ?? '-');
+                                    $status = $result['status'] ?? 'unknown';
+                                    $kelas = match ($status) {
+                                        'available' => 'alert-success',
+                                        'full' => 'alert-danger',
+                                        'not_found', 'not_available' => 'alert-warning',
+                                        default => 'alert-info',
+                                    };
+                                @endphp
+                                <div class="alert {{ $kelas }} text-start">
+                                    @if (isset($result['detail']))
+                                        <strong>{{ $result['detail']['jurnal'] ?? 'Jurnal' }}</strong>
+                                        ({{ $b }} {{ $t }})<br>
+                                        Dosen pembimbing: <strong>{{ $result['detail']['dosen'] ?? '-' }}</strong><br>
+                                        Link:
+                                        @if (!empty($result['detail']['link'] ?? ''))
+                                            <a href="{{ $result['detail']['link'] }}" target="_blank"
+                                                rel="noopener noreferrer">
+                                                {{ $result['detail']['link'] }}
+                                            </a>
+                                        @else
+                                            -
+                                        @endif
+                                        <hr class="my-2">
+                                    @endif
+                                    {{ $result['message'] ?? '' }}
+                                    @if (isset($result['detail']['kapasitas']))
+                                        <div class="mt-1">
+                                            Kapasitas: {{ $result['detail']['kapasitas'] ?? '-' }},
+                                            Terpakai: {{ $result['detail']['terpakai'] ?? '-' }},
+                                            Sisa: {{ $result['detail']['sisa'] ?? '-' }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
                     </div>
-
                 </div>
             </div>
         </section>
@@ -137,15 +234,18 @@
                         <div class="custom-block bg-white shadow-lg">
                             <div class="d-flex">
                                 <div>
-                                    <h5 class="mb-2">Manajemen Data Penjualan</h5>
-                                    <p class="mb-0">Admin dapat menambahkan data penjualan per bulan untuk setiap
-                                        produk sembako, seperti jumlah dan harga satuan.</p>
+                                    <h5 class="mb-2">Cek Ketersediaan Jurnal</h5>
+                                    <p class="mb-0">
+                                        Masukkan <em>link</em> rumah jurnal, pilih edisi (bulan & tahun), serta nama
+                                        dosen pembimbing untuk melihat apakah jurnal tersebut masih tersedia dan berapa
+                                        sisa slotnya.
+                                    </p>
                                 </div>
                                 <span class="badge bg-success rounded-pill ms-auto">✓</span>
                             </div>
 
                             <img src="images/topics/undraw_Educator_re_ju47.png" class="custom-block-image img-fluid"
-                                alt="Input Data Penjualan">
+                                alt="Cek Ketersediaan Rumah Jurnal">
                         </div>
                     </div>
 
@@ -153,15 +253,18 @@
                         <div class="custom-block bg-white shadow-lg">
                             <div class="d-flex">
                                 <div>
-                                    <h5 class="mb-2">Prediksi Otomatis</h5>
-                                    <p class="mb-0">Sistem menghitung prediksi penjualan 6 bulan ke depan secara
-                                        otomatis dengan metode regresi linier sederhana.</p>
+                                    <h5 class="mb-2">Aturan Fleksibel</h5>
+                                    <p class="mb-0">
+                                        Admin dapat mengatur maksimal mahasiswa per edisi dan memastikan dosen
+                                        pembimbing tidak sama dalam edisi yang sama—semuanya dapat diubah lewat panel
+                                        aturan.
+                                    </p>
                                 </div>
                                 <span class="badge bg-primary rounded-pill ms-auto">✓</span>
                             </div>
 
                             <img src="images/topics/colleagues-working-cozy-office-medium-shot.png"
-                                class="custom-block-image img-fluid" alt="Prediksi">
+                                class="custom-block-image img-fluid" alt="Aturan Ketersediaan Jurnal">
                         </div>
                     </div>
 
@@ -169,15 +272,17 @@
                         <div class="custom-block bg-white shadow-lg">
                             <div class="d-flex">
                                 <div>
-                                    <h5 class="mb-2">Visualisasi dan Analisis</h5>
-                                    <p class="mb-0">Tampilkan grafik perbandingan data aktual dan hasil prediksi per
-                                        produk, serta nilai akurasi (MAPE).</p>
+                                    <h5 class="mb-2">Ringkasan per Edisi</h5>
+                                    <p class="mb-0">
+                                        Lihat nama jurnal, link otomatis, jumlah mahasiswa yang sudah terpakai di setiap
+                                        edisi, serta sisa slot secara real-time dari dashboard admin.
+                                    </p>
                                 </div>
                                 <span class="badge bg-info rounded-pill ms-auto">✓</span>
                             </div>
 
                             <img src="images/topics/undraw_Finance_re_gnv2.png" class="custom-block-image img-fluid"
-                                alt="Visualisasi Data">
+                                alt="Ringkasan Slot Jurnal">
                         </div>
                     </div>
 
@@ -203,11 +308,11 @@
                                 </div>
 
                                 <li>
-                                    <h4 class="text-white mb-3">1. Input Data Penjualan Produk</h4>
+                                    <h4 class="text-white mb-3">1. Masukkan Data Cek Jurnal</h4>
                                     <p class="text-white">
-                                        Admin menginput data penjualan untuk masing-masing produk sembako dari bulan
-                                        Januari hingga Juni.
-                                        Data ini meliputi nama produk, harga satuan, dan jumlah penjualan per bulan.
+                                        Pengguna mengisi form dengan <em>link</em> rumah jurnal, memilih edisi (bulan &
+                                        tahun),
+                                        serta dosen pembimbing yang membimbing tugas akhir.
                                     </p>
                                     <div class="icon-holder">
                                         <i class="bi-pencil-square"></i>
@@ -215,12 +320,12 @@
                                 </li>
 
                                 <li>
-                                    <h4 class="text-white mb-3">2. Sistem Proses Regresi Linier</h4>
+                                    <h4 class="text-white mb-3">2. Sistem Mengecek Ketersediaan</h4>
                                     <p class="text-white">
-                                        Setelah data disimpan, sistem secara otomatis menghitung persamaan regresi
-                                        linier sederhana
-                                        untuk setiap produk. Nilai koefisien (b), intercept (a), dan MAPE dihitung
-                                        sebagai dasar prediksi.
+                                        Sistem memproses input, mencari data rumah jurnal di database, dan mencocokkan
+                                        dengan aturan
+                                        ketersediaan yang sudah ditentukan oleh admin (kuota maksimal dan dosen
+                                        pembimbing unik).
                                     </p>
                                     <div class="icon-holder">
                                         <i class="bi-gear-fill"></i>
@@ -228,11 +333,10 @@
                                 </li>
 
                                 <li>
-                                    <h4 class="text-white mb-3">3. Prediksi Penjualan 6 Bulan ke Depan</h4>
+                                    <h4 class="text-white mb-3">3. Hitung Slot Tersisa</h4>
                                     <p class="text-white">
-                                        Berdasarkan persamaan regresi, sistem menghasilkan prediksi penjualan dari bulan
-                                        Juli hingga Desember.
-                                        Hasil ini disimpan dan dapat dilihat dalam bentuk tabel dan grafik.
+                                        Sistem menghitung jumlah mahasiswa yang sudah terdaftar pada edisi tersebut,
+                                        kemudian menampilkan sisa slot yang masih tersedia.
                                     </p>
                                     <div class="icon-holder">
                                         <i class="bi-bar-chart-line-fill"></i>
@@ -240,12 +344,11 @@
                                 </li>
 
                                 <li>
-                                    <h4 class="text-white mb-3">4. Lihat Visualisasi & Detail Produk</h4>
+                                    <h4 class="text-white mb-3">4. Tampilkan Hasil Cek</h4>
                                     <p class="text-white">
-                                        Pengguna dapat melihat detail lengkap untuk setiap produk, termasuk data aktual,
-                                        hasil prediksi,
-                                        nilai MAPE, dan grafik perbandingan. Informasi ini berguna untuk pengambilan
-                                        keputusan bisnis.
+                                        Hasil ditampilkan secara jelas: nama rumah jurnal, link, edisi (bulan & tahun),
+                                        nama dosen pembimbing, serta status ketersediaan (tersedia, penuh, atau tidak
+                                        bisa digunakan).
                                     </p>
                                     <div class="icon-holder">
                                         <i class="bi-file-earmark-bar-graph"></i>
@@ -257,8 +360,8 @@
 
                     <div class="col-12 text-center mt-5">
                         <p class="text-white">
-                            Ingin mengetahui prediksi produk Anda?
-                            <a href="#" class="btn custom-btn custom-border-btn ms-3">Hubungi Kami</a>
+                            Ingin cek ketersediaan rumah jurnal Anda?
+                            <a href="#section_1" class="btn custom-btn custom-border-btn ms-3">Mulai Cek</a>
                         </p>
                     </div>
 
@@ -266,65 +369,60 @@
             </div>
         </section>
 
-    </main>
 
+    </main>
     <footer class="site-footer section-padding">
         <div class="container">
             <div class="row">
 
-                {{-- Brand dan Deskripsi --}}
+                <!-- Brand dan Deskripsi -->
                 <div class="col-lg-3 col-12 mb-4 pb-2">
                     <a class="navbar-brand mb-2" href="/">
-                        <i class="bi bi-bar-chart-line-fill"></i>
-                        <span>Sembako</span>
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                        <span>Rumah Jurnal</span>
                     </a>
                     <p class="text-white">
-                        Sistem prediksi penjualan sembako menggunakan metode regresi linier sederhana. Membantu
-                        pengambilan keputusan bisnis dengan data yang akurat dan visual.
+                        Sistem pengecekan ketersediaan rumah jurnal untuk mahasiswa tugas akhir.
+                        Membantu memastikan slot jurnal, dosen pembimbing, dan edisi yang sesuai dengan aturan yang
+                        berlaku.
                     </p>
                 </div>
 
-                {{-- Navigasi Menu --}}
+                <!-- Navigasi Menu -->
                 <div class="col-lg-3 col-md-4 col-6">
                     <h6 class="site-footer-title mb-3">Menu</h6>
                     <ul class="site-footer-links">
                         <li class="site-footer-link-item"><a href="/" class="site-footer-link">Beranda</a></li>
-                        <li class="site-footer-link-item"><a href="/admin/data-penjualan"
-                                class="site-footer-link">Data Penjualan</a></li>
-                        <li class="site-footer-link-item"><a href="/admin/koefisien"
-                                class="site-footer-link">Koefisien</a></li>
-                        <li class="site-footer-link-item"><a href="/admin/hasil-prediksi"
-                                class="site-footer-link">Hasil Prediksi</a></li>
+                        <li class="site-footer-link-item"><a href="/admin/data-mahasiswa"
+                                class="site-footer-link">Data Mahasiswa</a></li>
+                        <li class="site-footer-link-item"><a href="/admin/data-dosen" class="site-footer-link">Data
+                                Dosen</a></li>
+                        <li class="site-footer-link-item"><a href="/admin/data-jurnal" class="site-footer-link">Data
+                                Jurnal</a></li>
+                        <li class="site-footer-link-item"><a href="/admin/kontrol-jurnal"
+                                class="site-footer-link">Kontrol Jurnal</a></li>
                     </ul>
                 </div>
 
-                {{-- Kontak --}}
+                <!-- Kontak -->
                 <div class="col-lg-3 col-md-4 col-6 mb-4 mb-lg-0">
                     <h6 class="site-footer-title mb-3">Kontak</h6>
                     <p class="text-white d-flex mb-1">
                         <a href="tel:081234567890" class="site-footer-link">0812-3456-7890</a>
                     </p>
                     <p class="text-white d-flex">
-                        <a href="mailto:admin@prediksisembako.id"
-                            class="site-footer-link">admin@prediksisembako.id</a>
+                        <a href="mailto:admin@rumahjurnal.id" class="site-footer-link">admin@rumahjurnal.id</a>
                     </p>
                 </div>
 
-                {{-- Bahasa dan Hak Cipta --}}
+                <!-- Bahasa dan Hak Cipta -->
                 <div class="col-lg-3 col-md-4 col-12 mt-4 mt-lg-0 ms-auto">
-                    <div class="dropdown">
-                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            Bahasa Indonesia
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><button class="dropdown-item" type="button">English</button></li>
-                            <li><button class="dropdown-item" type="button">Melayu</button></li>
-                        </ul>
-                    </div>
+                    <a href="http://s01.flagcounter.com/more/LkX5"><img
+                            src="https://s01.flagcounter.com/count2/LkX5/bg_FFFFFF/txt_000000/border_CCCCCC/columns_2/maxflags_10/viewers_Pengunjung/labels_0/pageviews_0/flags_0/percent_0/"
+                            alt="Flag Counter" border="0"></a>
 
                     <p class="copyright-text mt-lg-5 mt-4">
-                        © 2025 Prediksi Penjualan Sembako.<br>
+                        © 2025 <a href="https://avinto.my.id">Alvin Alvtio</a><br>
                         All rights reserved.<br><br>
                     </p>
                 </div>
@@ -332,6 +430,7 @@
             </div>
         </div>
     </footer>
+
 
 
 
