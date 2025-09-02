@@ -18,13 +18,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans&display=swap"
         rel="stylesheet">
 
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
 
-    <link href="css/bootstrap-icons.css" rel="stylesheet">
+    <link href="/css/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
 
-    <link href="css/templatemo-topic-listing.css" rel="stylesheet">
+    <link href="/css/templatemo-topic-listing.css" rel="stylesheet">
 
 </head>
 
@@ -366,122 +366,9 @@
             </div>
         </section>
 
-        {{-- Bootstrap Icons (untuk ikon di modal) --}}
-        <link rel="stylesheet"
-            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 
-        <div class="row">
-            <div class="col-lg-10 col-12 mx-auto text-center">
-                <h1 class="text-white">Sistem Cek Ketersediaan Rumah Jurnal</h1>
-                <h6 class="text-white mt-3">Masukkan link, edisi, tahun, dan dosen pembimbing untuk cek
-                    ketersediaan</h6>
-
-                <div class="card mt-4 text-start">
-                    <div class="card-body">
-                        <form action="{{ route('public.cek') }}" method="POST" class="row g-3">
-                            @csrf
-
-                            <div class="col-12">
-                                <label class="form-label">Link Rumah Jurnal</label>
-                                <input type="url" name="link" value="{{ old('link', $input['link'] ?? '') }}"
-                                    class="form-control" placeholder="https://contoh.com/rumah-jurnal" required>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">Bulan (Edisi)</label>
-                                <select name="bulan" class="form-select" required>
-                                    @php $bulanMap = [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember']; @endphp
-                                    @foreach ($bulanMap as $k => $v)
-                                        <option value="{{ $k }}"
-                                            {{ (int) old('bulan', $input['bulan'] ?? 0) === $k ? 'selected' : '' }}>
-                                            {{ $v }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">Tahun</label>
-                                <input type="number" name="tahun"
-                                    value="{{ old('tahun', $input['tahun'] ?? '') }}" class="form-control"
-                                    placeholder="mis. 2025" min="2000" max="2100" required>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">Nama Dosen Pembimbing</label>
-                                <select name="dosen_pembimbing_id" class="form-select" required>
-                                    <option value="">-- Pilih Dosen --</option>
-                                    @foreach ($dosenList as $d)
-                                        <option value="{{ $d->id }}"
-                                            {{ (int) old('dosen_pembimbing_id', $input['dosen_pembimbing_id'] ?? 0) === $d->id ? 'selected' : '' }}>
-                                            {{ $d->nama }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            @if ($errors->any())
-                                <div class="col-12">
-                                    <div class="alert alert-danger">
-                                        <ul class="mb-0 ps-3">
-                                            @foreach ($errors->all() as $err)
-                                                <li>{{ $err }}</li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
-                                </div>
-                            @endif
-
-                            <div class="col-12 text-end">
-                                <button class="btn btn-primary">Cek Ketersediaan</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                @if ($result)
-                    <div class="mt-4">
-                        @php
-                            $b = $bulanMap[$result['detail']['bulan'] ?? ($input['bulan'] ?? 0)] ?? '-';
-                            $t = $result['detail']['tahun'] ?? ($input['tahun'] ?? '-');
-                            $status = $result['status'] ?? 'unknown';
-                            $kelas = match ($status) {
-                                'available' => 'alert-success',
-                                'full' => 'alert-danger',
-                                'not_found', 'not_available' => 'alert-warning',
-                                default => 'alert-info',
-                            };
-                        @endphp
-                        <div class="alert {{ $kelas }} text-start">
-                            @if (isset($result['detail']))
-                                <strong>{{ $result['detail']['jurnal'] ?? 'Jurnal' }}</strong>
-                                ({{ $b }} {{ $t }})<br>
-                                Dosen pembimbing: <strong>{{ $result['detail']['dosen'] ?? '-' }}</strong><br>
-                                Link:
-                                @if (!empty($result['detail']['link'] ?? ''))
-                                    <a href="{{ $result['detail']['link'] }}" target="_blank"
-                                        rel="noopener noreferrer">
-                                        {{ $result['detail']['link'] }}
-                                    </a>
-                                @else
-                                    -
-                                @endif
-                                <hr class="my-2">
-                            @endif
-                            {{ $result['message'] ?? '' }}
-                            @if (isset($result['detail']['kapasitas']))
-                                <div class="mt-1">
-                                    Kapasitas: {{ $result['detail']['kapasitas'] ?? '-' }},
-                                    Terpakai: {{ $result['detail']['terpakai'] ?? '-' }},
-                                    Sisa: {{ $result['detail']['sisa'] ?? '-' }}
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                @endif
-
-            </div>
-        </div>
+      
         </div>
         </section>
 
@@ -503,7 +390,7 @@
                                 <span class="badge bg-success rounded-pill ms-auto">✓</span>
                             </div>
 
-                            <img src="images/topics/undraw_Educator_re_ju47.png" class="custom-block-image img-fluid"
+                            <img src="/images/topics/undraw_Educator_re_ju47.png" class="custom-block-image img-fluid"
                                 alt="Cek Ketersediaan Rumah Jurnal">
                         </div>
                     </div>
@@ -522,7 +409,7 @@
                                 <span class="badge bg-primary rounded-pill ms-auto">✓</span>
                             </div>
 
-                            <img src="images/topics/colleagues-working-cozy-office-medium-shot.png"
+                            <img src="/images/topics/colleagues-working-cozy-office-medium-shot.png"
                                 class="custom-block-image img-fluid" alt="Aturan Ketersediaan Jurnal">
                         </div>
                     </div>
@@ -540,7 +427,7 @@
                                 <span class="badge bg-info rounded-pill ms-auto">✓</span>
                             </div>
 
-                            <img src="images/topics/undraw_Finance_re_gnv2.png" class="custom-block-image img-fluid"
+                            <img src="/images/topics/undraw_Finance_re_gnv2.png" class="custom-block-image img-fluid"
                                 alt="Ringkasan Slot Jurnal">
                         </div>
                     </div>
@@ -702,11 +589,11 @@
         integrity="sha384-7qAoOXltbVP82dhxHAUje59V5r2YsVfBafyUDxEdApLPmcdhBPg1DKg1ERo0BZlK" crossorigin="anonymous">
     </script>
     <!-- JAVASCRIPT FILES -->
-    <script src="script/jquery.min.js"></script>
-    <script src="script/bootstrap.bundle.min.js"></script>
-    <script src="script/jquery.sticky.js"></script>
-    <script src="script/click-scroll.js"></script>
-    <script src="script/custom.js"></script>
+    <script src="/script/jquery.min.js"></script>
+    <script src="/script/bootstrap.bundle.min.js"></script>
+    <script src="/script/jquery.sticky.js"></script>
+    <script src="/script/click-scroll.js"></script>
+    <script src="/script/custom.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     @if ($result)
         <script>
