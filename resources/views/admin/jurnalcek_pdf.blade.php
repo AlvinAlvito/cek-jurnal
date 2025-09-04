@@ -36,6 +36,7 @@
                 <th class="nowrap">Sinta</th>
                 <th class="nowrap">Tahun Akreditasi</th>
                 <th>Edisi (Jadwal Terbit)</th>
+                <th class="nowrap">Waktu</th>
             </tr>
         </thead>
         <tbody>
@@ -70,6 +71,7 @@
                 </td>
                 <td class="nowrap">{{ $row->rumahJurnal->tahun_akreditasi ?? '-' }}</td>
                 <td>{{ $row->edisi_label ?? '-' }}</td>
+                <td> {{ optional($row->created_at)->format('d M Y') }}</td>
             </tr>
         @empty
             <tr>

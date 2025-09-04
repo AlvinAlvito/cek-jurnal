@@ -4,13 +4,13 @@
             <img src="/images/logo.jpg"  alt="">
         </div>
 
-        <span class="logo_name">Toko Gento</span>
+        <span class="logo_name">Admin</span>
     </div>
 
     <div class="menu-items">
         <ul class="nav-links">
             <li >
-                <a href="/admin" class="{{ Request::is('/admin') ? 'active' : '' }}">
+                <a onclick="window.location.href='/admin'" href="javascript:void(0)" class="{{ Request::is('/admin') ? 'active' : '' }}">
                     <i class="uil uil-estate"></i>
                     <span class="link-name">Beranda</span>
                 </a>

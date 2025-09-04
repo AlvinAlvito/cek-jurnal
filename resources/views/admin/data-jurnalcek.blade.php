@@ -57,31 +57,31 @@
                         <tr>
                             <th style="width:60px;">No</th>
                             <th>Mahasiswa</th>
-                            <th>Dosen</th>
+                            <th>Dosen Pembimbing</th>
                             <th>Rumah Jurnal</th>
                             <th>Judul Jurnal</th>
                             <th>Link</th>
-                            <th>Bulan</th>
-                            <th>Tahun</th>
+                            <th>Edisi</th>
                             <th>Status</th>
+                            <th>Waktu</th>
                             <th style="width:110px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @php
                             $namaBulan = [
-                                1 => 'Jan',
-                                2 => 'Feb',
-                                3 => 'Mar',
-                                4 => 'Apr',
+                                1 => 'Januari',
+                                2 => 'Febuari',
+                                3 => 'Maret',
+                                4 => 'April',
                                 5 => 'Mei',
-                                6 => 'Jun',
-                                7 => 'Jul',
-                                8 => 'Ags',
-                                9 => 'Sep',
-                                10 => 'Okt',
-                                11 => 'Nov',
-                                12 => 'Des',
+                                6 => 'Juni',
+                                7 => 'Juli',
+                                8 => 'Agustus',
+                                9 => 'September',
+                                10 => 'Oktober',
+                                11 => 'Nopember',
+                                12 => 'Desesmber',
                             ];
                         @endphp
                         @forelse ($pemakaian as $item)
@@ -100,9 +100,13 @@
                                         -
                                     @endif
                                 </td>
-                                <td>{{ $namaBulan[$item->edisi->bulan ?? 0] ?? '-' }}</td>
-                                <td>{{ $item->edisi->tahun ?? '-' }}</td>
+                                <td>{{ $namaBulan[$item->edisi->bulan ?? 0] ?? '-' }} {{ $item->edisi->tahun ?? '-' }}
+                                </td>
                                 <td class="text-capitalize">{{ $item->status }}</td>
+                                <td>
+                                    {{ optional($item->created_at)->format('d M Y') }}
+                                </td>
+
                                 <td class="d-flex gap-2">
                                     <button class="btn btn-link text-primary p-0 m-0" data-bs-toggle="modal"
                                         data-bs-target="#modalEdit{{ $item->id }}" title="Edit">

@@ -554,7 +554,7 @@
                 <div class="col-lg-3 col-md-4 col-6 mb-4 mb-lg-0">
                     <h6 class="site-footer-title mb-3">Kontak</h6>
                     <p class="text-white d-flex mb-1">
-                        <a href="tel:081234567890" class="site-footer-link">0812-3456-7890</a>
+                        <a href="" class="site-footer-link">+62 813-1932-6764</a>
                     </p>
                     <p class="text-white d-flex">
                         <a href="mailto:admin@rumahjurnal.id" class="site-footer-link">admin@rumahjurnal.id</a>
