@@ -113,7 +113,7 @@
 
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Maksimal jumlah mahasiswa dalam 1 edisi</label>
+                        <label class="form-label">Maksimal jumlah mahasiswa dalam 1 edisi uma Jurnal</label>
                         <input type="number" name="max_mahasiswa_per_edisi" class="form-control"
                                value="{{ (int)($rules->max_mahasiswa_per_edisi ?? 2) }}" min="1" max="255" required>
                         <div class="form-text">Mengubah nilai ini dapat diterapkan ke semua edisi.</div>
@@ -123,7 +123,7 @@
                         <input class="form-check-input" type="checkbox" name="unik_dosen_per_edisi" value="1"
                                id="unikDosen" {{ (int)($rules->unik_dosen_per_edisi ?? 1) === 1 ? 'checked' : '' }}>
                         <label class="form-check-label" for="unikDosen">
-                            Dosen pembimbing tidak boleh sama pada satu rumah jurnal di edisi yang sama
+                           Maksimal Dosen pembimbing yang boleh sama pada satu rumah jurnal di edisi yang sama adala 2
                         </label>
                     </div>
 

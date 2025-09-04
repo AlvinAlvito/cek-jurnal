@@ -40,7 +40,7 @@ class KontrolJurnalController extends Controller
             $rules = (object)[
                 'id' => null,
                 'max_mahasiswa_per_edisi' => 2,
-                'unik_dosen_per_edisi' => 1,
+                'unik_dosen_per_edisi' => 2,
             ];
         }
 
