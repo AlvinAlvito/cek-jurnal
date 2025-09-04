@@ -9,8 +9,12 @@ class PemakaianRumahJurnal extends Model
 {
     protected $table = 'pemakaian_rumah_jurnal';
     protected $fillable = [
-        'rumah_jurnal_id','edisi_id','mahasiswa_id','dosen_pembimbing_id',
-        'status','digunakan_pada','catatan'
+        'rumah_jurnal_id',
+        'edisi_id',
+        'mahasiswa_id',
+        'dosen_pembimbing_id',
+        'judul_jurnal',      // <-- tambahan
+        'status',
     ];
 
     protected $casts = [

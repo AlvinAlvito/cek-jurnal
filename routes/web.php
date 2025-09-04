@@ -135,6 +135,14 @@ Route::put('/admin/data-jurnalcek/{id}', function (Request $request, $id) {
     if (!session('is_admin')) return redirect('/');
     return app(App\Http\Controllers\JurnalcekController::class)->update($request, $id);
 })->name('jurnalcek.update');
+// routes/web.php
+
+
+Route::get('/admin/jurnalcek/export-pdf', function () {
+    if (!session('is_admin')) return redirect('/');
+    return app(JurnalcekController::class)->exportPdf(request());
+})->name('jurnalcek.export.pdf');
+
 
 
 // Kontrol jurnal

@@ -11,13 +11,22 @@ class JurnalController extends Controller
     public function index()
     {
         $q = request('q');
-        $perPage = (int) (request('per_page') ?? 10);
+        $perPage = (int) (request('per_page') ?? 100);
+        $bulan = ['jan','feb','mar','apr','mei','jun','jul','agu','sep','okt','nov','des'];
 
         $query = RumahJurnal::query()->orderByDesc('id');
+
         if (!empty($q)) {
-            $query->where(function ($w) use ($q) {
+            $qLower = strtolower(trim($q));
+            $query->where(function ($w) use ($q, $qLower, $bulan) {
                 $w->where('nama', 'like', "%{$q}%")
-                  ->orWhere('link', 'like', "%{$q}%");
+                  ->orWhere('link', 'like', "%{$q}%")
+                  ->orWhere('sinta', (int) $q ?: null)
+                  ->orWhere('tahun_akreditasi', (int) $q ?: null);
+
+                if (in_array($qLower, $bulan, true)) {
+                    $w->orWhereJsonContains('edisi', $qLower);
+                }
             });
         }
 
@@ -36,10 +45,15 @@ class JurnalController extends Controller
 
     public function store(Request $request)
     {
+        $bulan = ['jan','feb','mar','apr','mei','jun','jul','agu','sep','okt','nov','des'];
+
         $validated = $request->validate([
-            'nama'       => ['required', 'string', 'max:150'],
-            'link'       => ['required', 'string', 'max:255', 'url', 'unique:rumah_jurnal,link'],
-            'deskripsi'  => ['nullable', 'string'],
+            'nama'              => ['required', 'string', 'max:150'],
+            'link'              => ['required', 'string', 'max:255', 'url', 'unique:rumah_jurnal,link'],
+            'sinta'             => ['required', 'integer', 'min:1', 'max:6'],
+            'tahun_akreditasi'  => ['required', 'integer', 'between:2000,2100'],
+            'edisi'             => ['required', 'array', 'min:1'],
+            'edisi.*'           => [Rule::in($bulan)],
         ]);
 
         $data = RumahJurnal::create($validated);
@@ -54,14 +68,18 @@ class JurnalController extends Controller
     public function update(Request $request, $id)
     {
         $row = RumahJurnal::findOrFail($id);
+        $bulan = ['jan','feb','mar','apr','mei','jun','jul','agu','sep','okt','nov','des'];
 
         $validated = $request->validate([
-            'nama'       => ['required', 'string', 'max:150'],
-            'link'       => [
+            'nama'              => ['required', 'string', 'max:150'],
+            'link'              => [
                 'required', 'string', 'max:255', 'url',
                 Rule::unique('rumah_jurnal', 'link')->ignore($row->id),
             ],
-            'deskripsi'  => ['nullable', 'string'],
+            'sinta'             => ['required', 'integer', 'min:1', 'max:6'],
+            'tahun_akreditasi'  => ['required', 'integer', 'between:2000,2100'],
+            'edisi'             => ['required', 'array', 'min:1'],
+            'edisi.*'           => [Rule::in($bulan)],
         ]);
 
         $row->update($validated);

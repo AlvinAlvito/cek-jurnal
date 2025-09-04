@@ -11,7 +11,7 @@ class MahasiswaController extends Controller
     public function index()
     {
         $q = request('q');
-        $perPage = (int) (request('per_page') ?? 10);
+        $perPage = (int) (request('per_page') ?? 100);
 
         $query = Mahasiswa::query()->orderByDesc('id');
         if (!empty($q)) {

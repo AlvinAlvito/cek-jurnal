@@ -8,7 +8,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class RumahJurnal extends Model
 {
     protected $table = 'rumah_jurnal';
-    protected $fillable = ['nama', 'link', 'deskripsi'];
+
+    protected $fillable = [
+        'nama',
+        'link',
+        'sinta',
+        'tahun_akreditasi',
+        'edisi', // akan berupa array (JSON)
+    ];
+
+    protected $casts = [
+        'edisi' => 'array',
+    ];
 
     public function edisi(): HasMany
     {

@@ -10,7 +10,7 @@ class KontrolJurnalController extends Controller
 {
     public function index()
     {
-        $perPage = (int) (request('per_page') ?? 10);
+        $perPage = (int) (request('per_page') ?? 100);
         $q = request('q');
 
         $query = EdisiRumahJurnal::query()
