@@ -34,9 +34,9 @@
 
         <nav class="navbar navbar-expand-lg">
             <div class="container">
-                <a class="navbar-brand" href="index.html">
+                <a class="navbar-brand" href="#">
                     <i class="bi-back"></i>
-                    <span>Cek Jurnal</span>
+                    <span data-bs-toggle="modal" data-bs-target="#loginModal"> Cek Jurnal</span>
                 </a>
 
                 <div class="d-lg-none ms-auto me-4">
@@ -156,7 +156,7 @@
                                     </div>
 
                                     <div class="col-md-4">
-                                        <label class="form-label">Nama Dosen Pembimbing</label>
+                                        <label class="form-label">Nama Dosen Pembimbing Anda</label>
                                         <select name="dosen_pembimbing_id" class="form-select" required>
                                             <option value="">-- Pilih Dosen --</option>
                                             @foreach ($dosenList as $d)

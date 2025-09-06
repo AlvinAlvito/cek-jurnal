@@ -89,7 +89,24 @@
                                 <td>{{ ($pemakaian->currentPage() - 1) * $pemakaian->perPage() + $loop->iteration }}</td>
                                 <td>{{ $item->mahasiswa->nama ?? '-' }}</td>
                                 <td>{{ $item->dosenPembimbing->nama ?? '—' }}</td>
-                                <td>{{ $item->rumahJurnal->nama ?? '-' }}</td>
+                                <td>
+                                    {{ $item->rumahJurnal->nama ?? '-' }}
+                                    @if ($item->rumahJurnal?->sinta)
+                                        @php
+                                            $sinta = $item->rumahJurnal->sinta;
+                                            $badgeClass =
+                                                $sinta == 4
+                                                    ? 'bg-secondary'
+                                                    : ($sinta == 3
+                                                        ? 'bg-primary'
+                                                        : ($sinta == 2
+                                                            ? 'bg-success'
+                                                            : 'bg-dark'));
+                                        @endphp
+                                        <span class="badge {{ $badgeClass }}">S{{ $sinta }}</span>
+                                    @endif
+                                </td>
+
                                 <td>{{ \Illuminate\Support\Str::limit($item->judul_jurnal ?? '—', 50) }}</td>
                                 <td>
                                     @if ($item->rumahJurnal?->link)
